@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ovwolfvo - Card Table</title>
+<style>
+  :root {
+    --card-w: 110px;
+    --card-h: 154px;
+    --corner-font: 22px;
+    --pip-size: 16px;
+    --table-bg-1: #111111;
+    --table-bg-2: #050505;
+    --line: rgba(255,255,255,0.10);
+    --panel-border: rgba(255,255,255,0.10);
+    --text: #f2f2f2;
+    --muted: rgba(255,255,255,0.70);
+    --missing-opacity: 0.30;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: "Georgia", "Times New Roman", serif;
+    background:
+      radial-gradient(circle at 50% 18%, rgba(255,255,255,0.045), transparent 26%),
+      linear-gradient(180deg, var(--table-bg-1), var(--table-bg-2));
+    color: var(--text);
+  }
+  body { padding: 22px; }
+  .wrap {
+    max-width: 1360px;
+    margin: 0 auto;
+  }
+  .backlink {
+    display: inline-block;
+    margin-bottom: 14px;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255,255,255,0.24);
+    padding-bottom: 2px;
+  }
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 18px;
+    margin-bottom: 18px;
+    padding: 0 2px;
+    flex-wrap: wrap;
+  }
+  .titleblock h1 {
+    margin: 0;
+    font-size: 34px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+  .subtitle {
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 14px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  .stats {
+    text-align: right;
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: 0.4px;
+  }
+  .stats strong { font-size: 20px; }
+  .table {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01)),
+      linear-gradient(180deg, #111111, #080808);
+    border: 1px solid var(--panel-border);
+    border-radius: 22px;
+    box-shadow: 0 22px 60px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.03);
+    padding: 18px 18px 20px 18px;
+  }
+  .row {
+    border-top: 1px solid var(--line);
+    padding: 12px 0;
+  }
+  .row:first-child {
+    border-top: none;
+    padding-top: 4px;
+  }
+  .row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+  .row-title {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #ffffff;
+  }
+  .row-count {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .cards {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.18) transparent;
+  }
+  .cards::-webkit-scrollbar { height: 8px; }
+  .cards::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 999px; }
+  .cards::-webkit-scrollbar-track { background: transparent; }
+  .card-shell {
+    width: var(--card-w);
+    min-width: var(--card-w);
+    height: var(--card-h);
+    position: relative;
+  }
+  .card-face {
+    position: absolute;
+    inset: 0;
+    background: #fcfcfc;
+    border: 2px solid #cfcfcf;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 14px 24px rgba(0,0,0,0.34);
+  }
+  .card-face.missing {
+    opacity: var(--missing-opacity);
+    filter: grayscale(1);
+  }
+  .playing-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #fcfcfc;
+  }
+  .playing-card.red   { color: #c21818; }
+  .playing-card.black { color: #222; }
+  .corner {
+    position: absolute;
+    width: 24px;
+    text-align: center;
+    line-height: 0.9;
+    font-weight: bold;
+    font-size: var(--corner-font);
+    user-select: none;
+  }
+  .corner.top-left {
+    top: 7px;
+    left: 7px;
+  }
+  .corner.bottom-right {
+    right: 7px;
+    bottom: 7px;
+    transform: rotate(180deg);
+  }
+  .corner .rank {
+    display: block;
+    font-size: 0.95em;
+  }
+  .corner .mini-suit {
+    display: block;
+    width: 18px;
+    height: 18px;
+    margin: 1px auto 0;
+    object-fit: contain;
+  }
+  .pip-field {
+    position: absolute;
+    left: 24%;
+    top: 18%;
+    width: 52%;
+    height: 64%;
+  }
+  .pip {
+    position: absolute;
+    width: var(--pip-size);
+    height: var(--pip-size);
+    transform: translate(-50%, -50%);
+  }
+  .pip img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .pip.upside-down {
+    transform: translate(-50%, -50%) rotate(180deg);
+  }
+  .ace-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 50px;
+    height: 50px;
+    transform: translate(-50%, -50%);
+  }
+  .ace-center img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .face-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 58px;
+    height: 78px;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .face-center img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+  }
+  .joker-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 58px;
+    height: 78px;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .joker-center img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+  }
+  .footer {
+    margin-top: 14px;
+    padding: 0 2px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.4px;
+  }
+  @media (max-width: 900px) {
+    :root {
+      --card-w: 94px;
+      --card-h: 132px;
+      --corner-font: 19px;
+      --pip-size: 15px;
+    }
+    .titleblock h1 { font-size: 28px; }
+    .ace-center { width: 42px; height: 42px; }
+    .face-center { width: 50px; height: 68px; }
+    .joker-center { width: 50px; height: 68px; }
+  }
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .table { padding: 12px; }
+    :root {
+      --card-w: 82px;
+      --card-h: 116px;
+      --corner-font: 17px;
+      --pip-size: 13px;
+    }
+    .ace-center { width: 36px; height: 36px; }
+    .face-center { width: 42px; height: 58px; }
+    .joker-center { width: 42px; height: 58px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="../index.html">← Back to card table</a>
+  <div class="topbar">
+    <div class="titleblock">
+      <h1>ovwolfvo Card Table</h1>
+      <div class="subtitle">GENERATED 2026-04-18 01:51:17 UTC</div>
+    </div>
+    <div class="stats">
+      <div><strong>26/54</strong></div>
+      <div>48.1% Complete</div>
+    </div>
+  </div>
+  <div class="table">
+    <div class="row">
+      <div class="row-head">
+        <div class="row-title">Clubs</div>
+        <div class="row-count">5/13</div>
+      </div>
+      <div class="cards">
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">2</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">2</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:50%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:50%; top:80%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">3</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">3</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:50%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:50%; top:80%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">4</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">4</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">5</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">5</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">6</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">6</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:26%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">7</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">7</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:34%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:26%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">8</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">8</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:20%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:34%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:26%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:50%; top:66%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">9</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">9</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:26%; top:18%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:18%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:30%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:26%; top:44%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:44%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:50%; top:56%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:26%; top:70%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:74%; top:70%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:50%; top:82%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">10</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">10</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:26%; top:18%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:18%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:28%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:26%; top:40%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:74%; top:40%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:26%; top:60%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:74%; top:60%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:26%; top:82%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:74%; top:82%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">J</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">J</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:20%; top:16%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:20%; top:38%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:20%; top:62%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:20%; top:84%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:24%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:50%; top:76%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:80%; top:16%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:80%; top:38%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:80%; top:62%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:80%; top:84%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">Q</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">Q</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:20%; top:16%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:20%; top:38%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:20%; top:62%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:20%; top:84%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:16%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:38%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:50%; top:62%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:50%; top:84%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:80%; top:16%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:80%; top:38%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:80%; top:62%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:80%; top:84%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">K</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">K</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="pip-field"><div class="pip" style="left:20%; top:12%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:20%; top:30%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:20%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:20%; top:70%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:20%; top:88%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:24%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:50%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:50%; top:76%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:80%; top:12%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:80%; top:30%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip" style="left:80%; top:50%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:80%; top:70%;"><img src="../clubs.png" alt="Clubs"></div><div class="pip upside-down" style="left:80%; top:88%;"><img src="../clubs.png" alt="Clubs"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">A</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="corner bottom-right"><span class="rank">A</span><img class="mini-suit" src="../clubs.png" alt="Clubs"></div><div class="ace-center"><img src="../clubs.png" alt="Clubs"></div></div></div></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-head">
+        <div class="row-title">Diamonds</div>
+        <div class="row-count">7/13</div>
+      </div>
+      <div class="cards">
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">2</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">2</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:50%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:50%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">3</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">3</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:50%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:50%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">4</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">4</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">5</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">5</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">6</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">6</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:26%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">7</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">7</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:34%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:26%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">8</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">8</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:20%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:34%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:26%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:50%; top:66%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">9</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">9</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:26%; top:18%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:18%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:30%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:26%; top:44%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:44%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:50%; top:56%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:26%; top:70%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:74%; top:70%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:50%; top:82%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">10</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">10</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:26%; top:18%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:18%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:28%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:26%; top:40%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:74%; top:40%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:26%; top:60%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:74%; top:60%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:26%; top:82%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:74%; top:82%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">J</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">J</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:20%; top:16%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:20%; top:38%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:20%; top:62%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:20%; top:84%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:24%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:50%; top:76%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:80%; top:16%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:80%; top:38%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:80%; top:62%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:80%; top:84%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">Q</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">Q</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:20%; top:16%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:20%; top:38%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:20%; top:62%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:20%; top:84%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:16%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:38%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:50%; top:62%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:50%; top:84%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:80%; top:16%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:80%; top:38%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:80%; top:62%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:80%; top:84%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">K</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">K</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="pip-field"><div class="pip" style="left:20%; top:12%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:20%; top:30%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:20%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:20%; top:70%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:20%; top:88%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:24%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:50%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:50%; top:76%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:80%; top:12%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:80%; top:30%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip" style="left:80%; top:50%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:80%; top:70%;"><img src="../diamonds.png" alt="Diamonds"></div><div class="pip upside-down" style="left:80%; top:88%;"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">A</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="corner bottom-right"><span class="rank">A</span><img class="mini-suit" src="../diamonds.png" alt="Diamonds"></div><div class="ace-center"><img src="../diamonds.png" alt="Diamonds"></div></div></div></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-head">
+        <div class="row-title">Hearts</div>
+        <div class="row-count">6/13</div>
+      </div>
+      <div class="cards">
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">2</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">2</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:50%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:50%; top:80%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">3</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">3</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:50%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:50%; top:80%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">4</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">4</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">5</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">5</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">6</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">6</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:26%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">7</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">7</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:34%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:26%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">8</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">8</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:20%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:34%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:26%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:50%; top:66%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">9</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">9</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:26%; top:18%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:18%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:30%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:26%; top:44%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:44%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:50%; top:56%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:26%; top:70%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:74%; top:70%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:50%; top:82%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">10</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">10</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:26%; top:18%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:18%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:28%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:26%; top:40%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:74%; top:40%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:26%; top:60%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:74%; top:60%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:26%; top:82%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:74%; top:82%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card red"><div class="corner top-left"><span class="rank">J</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">J</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:20%; top:16%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:20%; top:38%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:20%; top:62%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:20%; top:84%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:24%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:50%; top:76%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:80%; top:16%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:80%; top:38%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:80%; top:62%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:80%; top:84%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">Q</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">Q</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:20%; top:16%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:20%; top:38%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:20%; top:62%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:20%; top:84%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:16%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:38%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:50%; top:62%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:50%; top:84%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:80%; top:16%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:80%; top:38%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:80%; top:62%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:80%; top:84%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">K</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">K</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="pip-field"><div class="pip" style="left:20%; top:12%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:20%; top:30%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:20%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:20%; top:70%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:20%; top:88%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:24%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:50%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:50%; top:76%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:80%; top:12%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:80%; top:30%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip" style="left:80%; top:50%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:80%; top:70%;"><img src="../hearts.png" alt="Hearts"></div><div class="pip upside-down" style="left:80%; top:88%;"><img src="../hearts.png" alt="Hearts"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">A</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="corner bottom-right"><span class="rank">A</span><img class="mini-suit" src="../hearts.png" alt="Hearts"></div><div class="ace-center"><img src="../hearts.png" alt="Hearts"></div></div></div></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-head">
+        <div class="row-title">Spades</div>
+        <div class="row-count">7/13</div>
+      </div>
+      <div class="cards">
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">2</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">2</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:50%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:50%; top:80%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">3</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">3</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:50%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:50%; top:80%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">4</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">4</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">5</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">5</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">6</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">6</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:26%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">7</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">7</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:34%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:26%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">8</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">8</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:26%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:20%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:34%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:26%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:50%; top:66%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:26%; top:80%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:74%; top:80%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">9</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">9</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:26%; top:18%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:18%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:30%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:26%; top:44%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:44%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:50%; top:56%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:26%; top:70%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:74%; top:70%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:50%; top:82%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">10</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">10</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:26%; top:18%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:18%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:28%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:26%; top:40%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:74%; top:40%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:26%; top:60%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:74%; top:60%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:26%; top:82%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:74%; top:82%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">J</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">J</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:20%; top:16%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:20%; top:38%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:20%; top:62%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:20%; top:84%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:24%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:50%; top:76%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:80%; top:16%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:80%; top:38%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:80%; top:62%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:80%; top:84%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">Q</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">Q</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:20%; top:16%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:20%; top:38%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:20%; top:62%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:20%; top:84%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:16%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:38%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:50%; top:62%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:50%; top:84%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:80%; top:16%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:80%; top:38%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:80%; top:62%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:80%; top:84%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">K</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">K</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="pip-field"><div class="pip" style="left:20%; top:12%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:20%; top:30%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:20%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:20%; top:70%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:20%; top:88%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:24%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:50%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:50%; top:76%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:80%; top:12%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:80%; top:30%;"><img src="../spades.png" alt="Spades"></div><div class="pip" style="left:80%; top:50%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:80%; top:70%;"><img src="../spades.png" alt="Spades"></div><div class="pip upside-down" style="left:80%; top:88%;"><img src="../spades.png" alt="Spades"></div></div></div></div></div>
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card black"><div class="corner top-left"><span class="rank">A</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="corner bottom-right"><span class="rank">A</span><img class="mini-suit" src="../spades.png" alt="Spades"></div><div class="ace-center"><img src="../spades.png" alt="Spades"></div></div></div></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-head">
+        <div class="row-title">Jokers</div>
+        <div class="row-count">1/2</div>
+      </div>
+      <div class="cards">
+        <div class="card-shell"><div class="card-face missing"><div class="playing-card red"><div class="corner top-left"><span class="rank">RJ</span><span class="mini-suit" style="font-size:18px; line-height:18px;"></span></div><div class="corner bottom-right"><span class="rank">RJ</span><span class="mini-suit" style="font-size:18px; line-height:18px;"></span></div><div class="joker-center"><img src="../Jokers/RedJoker.png" alt="Red Joker"></div></div></div></div>
+        <div class="card-shell"><div class="card-face"><div class="playing-card black"><div class="corner top-left"><span class="rank">BJ</span><span class="mini-suit" style="font-size:18px; line-height:18px;"></span></div><div class="corner bottom-right"><span class="rank">BJ</span><span class="mini-suit" style="font-size:18px; line-height:18px;"></span></div><div class="joker-center"><img src="../Jokers/BlackJoker.png" alt="Black Joker"></div></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"></div>
+</div>
+</body>
+</html>
